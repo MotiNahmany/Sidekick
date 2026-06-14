@@ -1,12 +1,16 @@
 import "dotenv/config";
 import express from "express";
 import Anthropic from "@anthropic-ai/sdk";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // JSON schema constraining Claude to exactly the shape the frontend renders.
 const BOOKS_SCHEMA = {
