@@ -1,0 +1,17 @@
+{
+  "name": "book-recommender",
+  "version": "1.0.0",
+  "description": "Interest-based book recommender powered by the Claude API",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0",
+    "dotenv": "^17.0.0",
+    "express": "^5.0.0"
+  }
+}

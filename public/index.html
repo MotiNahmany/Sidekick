@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sidekick</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spline+Sans+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Top navigation, Anthropic-style: mark + wordmark left, section links centre, tag right -->
+    <header class="site-nav">
+      <div class="nav-inner u-container">
+        <a class="nav-logo" href="#book" aria-label="Sidekick home">
+          <svg class="nav-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 1.5c.3 4.8 2.2 6.7 7 7-4.8.3-6.7 2.2-7 7-.3-4.8-2.2-6.7-7-7 4.8-.3 6.7-2.2 7-7Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span class="nav-wordmark">Sidekick</span>
+        </a>
+
+        <nav class="nav" aria-label="Tools">
+          <button class="nav-btn" data-view="book" type="button">Book Match</button>
+          <button class="nav-btn" data-view="plan" type="button">Plan My Day</button>
+          <button class="nav-btn" data-view="perf" type="button">Top Performers</button>
+        </nav>
+
+        <div class="nav-tag">Powered by Claude</div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- View 1: Book Match -->
+      <section id="view-book" class="view">
+        <div class="page">
+          <header class="intro">
+            <p class="kicker">Book Match</p>
+            <h1>Tell me what you love.<br />I'll find your next great read.</h1>
+            <p class="sub">
+              Describe your interests — topics, moods, authors, anything — and get
+              five books picked for you, with a reason for each.
+            </p>
+          </header>
+
+          <form id="form" class="form">
+            <textarea
+              id="interests"
+              name="interests"
+              rows="4"
+              placeholder="e.g. I love space exploration, stoic philosophy, fast-paced mysteries, and learning to cook properly…"
+              required
+            ></textarea>
+
+            <div class="mic-row">
+              <button type="button" id="mic-book" class="mic" aria-pressed="false" aria-label="Dictate your interests">
+                <svg class="mic-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M12 14.5a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5.5a3 3 0 0 0 3 3Z" fill="currentColor" />
+                  <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                </svg>
+                <span id="mic-book-label">Speak your interests</span>
+              </button>
+              <span id="mic-book-hint" class="mic-hint"></span>
+            </div>
+
+            <button type="submit" id="submit" class="btn-primary">
+              <span>Recommend 5 books</span>
+              <svg class="btn-arrow" viewBox="0 0 30 30" aria-hidden="true">
+                <path
+                  d="M25.98 15.66 17.54 24.1a.94.94 0 1 1-1.33-1.33l6.84-6.83H4.69a.94.94 0 0 1 0-1.88h18.36l-6.84-6.83a.94.94 0 0 1 1.33-1.33l8.44 8.44a.94.94 0 0 1 0 1.32Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          </form>
+
+          <section id="status" class="status" hidden></section>
+          <section id="results" class="results"></section>
+        </div>
+      </section>
+
+      <!-- View 2: Plan My Day -->
+      <section id="view-plan" class="view">
+        <div class="page page-wide">
+          <header class="intro">
+            <p class="kicker">Plan My Day</p>
+            <h1>Tell me everything on your plate.<br />I'll build your day.</h1>
+            <p class="sub">
+              List your meetings, tasks, computer work, and lunch plans — in any
+              order. I'll organize and optimize them into a schedule.
+            </p>
+          </header>
+
+          <form id="plan-form" class="form">
+            <textarea
+              id="todos"
+              name="todos"
+              rows="7"
+              placeholder="e.g. 9:30 standup with the team, finish the Q3 report (needs data from Priya first), 1:1 with my manager at 2pm, lunch with Sam around noon, review 3 pull requests, prep slides for Thursday's review…"
+              required
+            ></textarea>
+
+            <div class="mic-row">
+              <button type="button" id="mic" class="mic" aria-pressed="false" aria-label="Dictate your plan">
+                <svg class="mic-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M12 14.5a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5.5a3 3 0 0 0 3 3Z" fill="currentColor" />
+                  <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                </svg>
+                <span id="mic-label">Speak your plan</span>
+              </button>
+              <span id="mic-hint" class="mic-hint"></span>
+            </div>
+
+            <button type="submit" id="plan-submit" class="btn-primary">
+              <span>Build my schedule</span>
+              <svg class="btn-arrow" viewBox="0 0 30 30" aria-hidden="true">
+                <path
+                  d="M25.98 15.66 17.54 24.1a.94.94 0 1 1-1.33-1.33l6.84-6.83H4.69a.94.94 0 0 1 0-1.88h18.36l-6.84-6.83a.94.94 0 0 1 1.33-1.33l8.44 8.44a.94.94 0 0 1 0 1.32Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          </form>
+
+          <section id="plan-status" class="status" hidden></section>
+          <div id="plan-results" class="plan-results"></div>
+        </div>
+      </section>
+
+      <!-- View 3: Top Performers (embedded Power BI report) -->
+      <section id="view-perf" class="view">
+        <div class="page page-full">
+          <header class="intro">
+            <p class="kicker">Top Performers</p>
+            <h1>Live performance dashboard.</h1>
+            <p class="sub">Embedded Power BI report — auto-refreshes every minute while this tab is open.</p>
+          </header>
+
+          <div class="report-frame">
+            <iframe
+              id="perf-report"
+              title="Top Performers — Power BI report"
+              data-src="https://app.powerbi.com/reportEmbed?reportId=69ac713e-776b-4d46-b8d5-f911ca038d6b&groupId=1437ad24-c188-46d1-9b5d-89a7d8b2e5ef&ctid=dd52ea84-fa40-4d4d-8b45-3de9c141587f&pageName=ReportSection80514256a1a69d7c4504&autoAuth=true"
+              frameborder="0"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner u-container">
+        <svg class="footer-mark" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 1.5c.3 4.8 2.2 6.7 7 7-4.8.3-6.7 2.2-7 7-.3-4.8-2.2-6.7-7-7 4.8-.3 6.7-2.2 7-7Z"
+            fill="currentColor"
+          />
+        </svg>
+        <span class="footer-text">© 2026 Sidekick · Powered by Claude</span>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
