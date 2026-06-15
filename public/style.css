@@ -411,6 +411,11 @@ textarea:focus {
   /* All five books side by side in a single row — no vertical scroll. */
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.9rem;
+  /* Cards ~25% wider than the 920px text column by using the empty space to
+     the right; capped to the content area (viewport − 252px sidebar − padding)
+     so the row can never roll off the page. Reset on phones below. */
+  width: 1150px;
+  max-width: calc(100vw - 252px - 2 * clamp(1.25rem, 4vw, 3rem));
 }
 
 .card {
@@ -827,9 +832,12 @@ textarea:focus {
     font-size: clamp(2rem, 7vw, 2.6rem);
   }
 
-  /* Two books per row on phones (still no horizontal scroll). */
+  /* Two books per row on phones (still no horizontal scroll). The sidebar is
+     a top bar here, so undo the desktop breakout width. */
   .results {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto;
+    max-width: 100%;
   }
 }
 
