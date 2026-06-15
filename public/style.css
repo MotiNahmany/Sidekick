@@ -109,15 +109,6 @@ body {
   letter-spacing: -0.01em;
 }
 
-.brand-role {
-  font-family: var(--font-mono);
-  font-size: 0.67rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-faded);
-  padding-left: calc(22px + 0.55rem);
-}
-
 .nav {
   display: flex;
   flex-direction: column;
@@ -168,17 +159,36 @@ body {
   min-width: 0;
 }
 
-/* Andrea, top-right, 25% of viewport height */
-.hero-avatar {
+/* Andrea + quote, top-right. The PNG is transparent, so no card/shadow —
+   she blends straight onto the page. */
+.hero {
   position: absolute;
   top: clamp(1rem, 2.5vw, 1.75rem);
   right: clamp(1.25rem, 4vw, 3rem);
-  height: 25vh;
-  width: auto;
-  border-radius: 18px;
-  box-shadow: 0 18px 50px -20px rgba(20, 20, 19, 0.45);
+  margin: 0;
+  width: clamp(150px, 17vw, 215px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   z-index: 5;
   pointer-events: none;
+}
+
+.hero-avatar {
+  height: 25vh;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+.hero-quote {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--ink-faded);
 }
 
 .content {
@@ -190,7 +200,7 @@ body {
 /* Keep the intro headings clear of the avatar on wider screens. */
 @media (min-width: 760px) {
   .intro {
-    padding-right: clamp(150px, 19vw, 250px);
+    padding-right: clamp(170px, 20vw, 275px);
   }
 }
 
@@ -704,10 +714,6 @@ textarea:focus {
     border-bottom: 1px solid var(--border);
   }
 
-  .brand-role {
-    display: none;
-  }
-
   .nav {
     flex-direction: row;
     flex-wrap: wrap;
@@ -719,8 +725,8 @@ textarea:focus {
   }
 
   /* On phones the rail becomes a top bar (brand already visible there),
-     so hide the floating avatar to avoid overlap/clipping. */
-  .hero-avatar {
+     so hide the floating avatar + quote to avoid overlap/clipping. */
+  .hero {
     display: none;
   }
 
