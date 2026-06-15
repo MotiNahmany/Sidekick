@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sidekick</title>
+    <title>Andrea Blake — Revenue Cycle Management</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,17 +14,20 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- Top navigation, Anthropic-style: mark + wordmark left, section links centre, tag right -->
-    <header class="site-nav">
-      <div class="nav-inner u-container">
-        <a class="nav-logo" href="#book" aria-label="Sidekick home">
-          <svg class="nav-mark" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M12 1.5c.3 4.8 2.2 6.7 7 7-4.8.3-6.7 2.2-7 7-.3-4.8-2.2-6.7-7-7 4.8-.3 6.7-2.2 7-7Z"
-              fill="currentColor"
-            />
-          </svg>
-          <span class="nav-wordmark">Sidekick</span>
+    <div class="app-shell">
+      <!-- Left pane: brand + vertical tool nav -->
+      <aside class="sidebar">
+        <a class="brand" href="#book" aria-label="Andrea Blake home">
+          <span class="brand-top">
+            <svg class="nav-mark" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 1.5c.3 4.8 2.2 6.7 7 7-4.8.3-6.7 2.2-7 7-.3-4.8-2.2-6.7-7-7 4.8-.3 6.7-2.2 7-7Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span class="nav-wordmark">Andrea Blake</span>
+          </span>
+          <span class="brand-role">Revenue Cycle Management</span>
         </a>
 
         <nav class="nav" aria-label="Tools">
@@ -32,11 +36,20 @@
           <button class="nav-btn" data-view="perf" type="button">Top Performers</button>
         </nav>
 
-        <div class="nav-tag">Powered by Claude</div>
-      </div>
-    </header>
+        <div class="sidebar-foot">
+          <span class="nav-tag">Powered by Claude</span>
+        </div>
+      </aside>
 
-    <main class="content">
+      <div class="main">
+        <!-- Avatar, top-right, ~25% of viewport height -->
+        <img
+          class="hero-avatar"
+          src="andrea.png"
+          alt="Andrea Blake, Revenue Cycle Management AI agent"
+        />
+
+        <main class="content">
       <!-- View 1: Book Match -->
       <section id="view-book" class="view">
         <div class="page">
@@ -153,7 +166,9 @@
           </div>
         </div>
       </section>
-    </main>
+        </main>
+      </div>
+    </div>
 
     <footer class="site-footer">
       <div class="footer-inner u-container">
@@ -163,7 +178,7 @@
             fill="currentColor"
           />
         </svg>
-        <span class="footer-text">© 2026 Sidekick · Powered by Claude</span>
+        <span class="footer-text">© 2026 Andrea Blake · Powered by Claude</span>
       </div>
     </footer>
 
