@@ -9,6 +9,41 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
+// ---- Maintenance switch -------------------------------------------------
+// Set the env var MAINTENANCE=on (in Render → Environment) to take the whole
+// site offline behind a "back soon" page; set it to off (or remove it) to
+// resume. Evaluated at startup, so a change triggers a redeploy/restart.
+const MAINTENANCE = /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
+
+const MAINTENANCE_HTML = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Andrea Blake — back soon</title>
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; align-items: center; justify-content: center;
+    background: #1e1e1e; color: #d4d4d4; text-align: center; padding: 2rem;
+    font-family: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif; }
+  h1 { color: #ff5b00; font-size: 2.4rem; margin: 0 0 0.75rem; }
+  p { font-size: 1.15rem; line-height: 1.5; color: #9d9d9d; margin: 0.35rem 0; }
+  .tag { margin-top: 1.75rem; font-size: 0.78rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #6b6b6b; }
+</style></head>
+<body><div>
+  <h1>Andrea Blake</h1>
+  <p>We've stepped out for the night.</p>
+  <p>The site is paused for maintenance and will be back tomorrow.</p>
+  <div class="tag">Temporarily offline</div>
+</div></body></html>`;
+
+if (MAINTENANCE) {
+  app.use((req, res) => {
+    res.set("Retry-After", "3600");
+    res.status(503).type("html").send(MAINTENANCE_HTML);
+  });
+}
+// -------------------------------------------------------------------------
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
