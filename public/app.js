@@ -398,30 +398,57 @@ function fmtLien(col, v) {
   return String(v);
 }
 
+let lienRows = [];
+
+function lienTableHtml(rows) {
+  const head = LIEN_COLUMNS.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("");
+  const body = rows
+    .map((r) => {
+      const cells = LIEN_COLUMNS.map((c) => {
+        const cls = [c.cls, c.type === "money" || c.type === "num" ? "num" : ""]
+          .filter(Boolean)
+          .join(" ");
+        return `<td${cls ? ` class="${cls}"` : ""}>${escapeHtml(fmtLien(c, r[c.key]))}</td>`;
+      }).join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+  return `<table class="lien-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function applyLienFilter() {
+  const table = document.getElementById("lien-table");
+  const select = document.getElementById("lien-firm");
+  const count = document.getElementById("lien-count");
+  if (!table) return;
+  const firm = select ? select.value : "";
+  const rows = firm ? lienRows.filter((r) => (r.SF_Account_Name || "") === firm) : lienRows;
+  table.innerHTML = lienTableHtml(rows);
+  if (count) count.textContent = `${rows.length} of ${lienRows.length} records`;
+}
+
 let lienLoaded = false;
 async function loadLiens() {
-  const el = document.getElementById("lien-table");
+  const table = document.getElementById("lien-table");
   const status = document.getElementById("lien-status");
-  if (lienLoaded || !el) return;
+  const select = document.getElementById("lien-firm");
+  if (lienLoaded || !table) return;
   lienLoaded = true;
   if (status) showStatus(status, "Loading lien register…");
   try {
     const res = await fetch("liens.json");
     if (!res.ok) throw new Error("Could not load lien data.");
-    const rows = await res.json();
-    const head = LIEN_COLUMNS.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("");
-    const body = rows
-      .map((r) => {
-        const cells = LIEN_COLUMNS.map((c) => {
-          const cls = [c.cls, c.type === "money" || c.type === "num" ? "num" : ""]
-            .filter(Boolean)
-            .join(" ");
-          return `<td${cls ? ` class="${cls}"` : ""}>${escapeHtml(fmtLien(c, r[c.key]))}</td>`;
-        }).join("");
-        return `<tr>${cells}</tr>`;
-      })
-      .join("");
-    el.innerHTML = `<table class="lien-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    lienRows = await res.json();
+    if (select) {
+      const firms = [...new Set(lienRows.map((r) => r.SF_Account_Name).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b)
+      );
+      select.innerHTML =
+        `<option value="">All law firms (${lienRows.length})</option>` +
+        firms.map((f) => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join("");
+      select.onchange = applyLienFilter;
+    }
+    applyLienFilter();
     if (status) showStatus(status, null);
   } catch (err) {
     lienLoaded = false;

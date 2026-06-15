@@ -184,7 +184,6 @@ body {
 
 .content {
   width: 100%;
-  max-width: var(--maxw);
   padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.25rem, 4vw, 3rem) 5rem;
 }
 
@@ -661,9 +660,47 @@ textarea:focus {
 }
 
 /* -------------------------------------------------------- Lien register - */
+.lien-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.75rem;
+}
+
+.lien-filter-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faded);
+}
+
+.lien-select {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--oat);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  min-width: 300px;
+  cursor: pointer;
+}
+
+.lien-select:focus {
+  outline: none;
+  border-color: var(--clay);
+}
+
+.lien-count {
+  font-size: 0.82rem;
+  color: var(--ink-faded);
+}
+
 .lien-wrap {
-  margin-top: 2.25rem;
-  overflow-x: auto;
+  margin-top: 1.25rem;
+  max-height: 68vh;
+  overflow: auto; /* both horizontal and vertical scrollbars */
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   background: var(--oat);

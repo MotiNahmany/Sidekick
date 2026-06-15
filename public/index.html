@@ -163,6 +163,13 @@
             <h1>Lien register.</h1>
             <p class="sub">Lien accounts by law firm — snapshot of the latest 100 records.</p>
           </header>
+          <div class="lien-controls">
+            <label class="lien-filter-label" for="lien-firm">Law firm</label>
+            <select id="lien-firm" class="lien-select">
+              <option value="">All law firms</option>
+            </select>
+            <span id="lien-count" class="lien-count"></span>
+          </div>
           <section id="lien-status" class="status" hidden></section>
           <div id="lien-table" class="lien-wrap"></div>
         </div>
