@@ -4,17 +4,18 @@
    ========================================================================= */
 
 :root {
-  --ivory: #faf9f5;
-  --ivory-medium: #f3f1ea; /* page background */
-  --oat: #f0ede2; /* cards / inputs */
-  --oat-deep: #e8e4d6;
-  --slate-dark: #141413; /* footer, primary buttons */
-  --ink: #1d1c1a; /* body text */
-  --ink-faded: #6b6960; /* secondary text, labels */
-  --clay: #cc785c; /* accent / selection */
-  --clay-strong: #c2613f; /* accent hover */
-  --border: rgba(20, 20, 19, 0.12);
-  --border-strong: rgba(20, 20, 19, 0.22);
+  /* Dark scheme — VS Code "Dark+" inspired */
+  --ivory: #e7e7e7; /* light foreground (text on dark/accent surfaces) */
+  --ivory-medium: #1e1e1e; /* page background */
+  --oat: #252526; /* cards / inputs / sidebar surface */
+  --oat-deep: #2d2d31; /* hover / active / elevated */
+  --slate-dark: #161617; /* footer */
+  --ink: #d4d4d4; /* body text */
+  --ink-faded: #9d9d9d; /* secondary text, labels */
+  --clay: #4ec9b0; /* accent (teal) */
+  --clay-strong: #6fd7c4; /* accent hover */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -48,7 +49,7 @@ body {
 }
 
 ::selection {
-  background: rgba(204, 120, 92, 0.45);
+  background: rgba(78, 201, 176, 0.35);
 }
 
 .u-container {
@@ -77,7 +78,7 @@ body {
   flex-direction: column;
   gap: 2.25rem;
   padding: 1.7rem 1.35rem;
-  background: color-mix(in srgb, var(--ivory) 65%, var(--ivory-medium));
+  background: var(--oat);
   border-right: 1px solid var(--border);
 }
 
@@ -303,7 +304,7 @@ textarea {
   font-size: 1.02rem;
   line-height: 1.5;
   color: var(--ink);
-  background: var(--ivory);
+  background: var(--oat);
   border: 1px solid var(--border);
   border-radius: var(--radius-input);
   padding: 1.1rem 1.2rem;
@@ -318,7 +319,7 @@ textarea::placeholder {
 textarea:focus {
   outline: none;
   border-color: var(--clay);
-  box-shadow: 0 0 0 3px rgba(204, 120, 92, 0.18);
+  box-shadow: 0 0 0 3px rgba(78, 201, 176, 0.25);
 }
 
 /* Primary button — dark slate pill with a circular arrow, Anthropic-style */
@@ -329,9 +330,9 @@ textarea:focus {
   font: inherit;
   font-weight: 500;
   font-size: 1rem;
-  color: var(--ivory);
-  background: var(--slate-dark);
-  border: 1px solid var(--slate-dark);
+  color: #0c1a17;
+  background: var(--clay);
+  border: 1px solid var(--clay);
   border-radius: 999px;
   padding: 0.7rem 0.85rem 0.7rem 1.4rem;
   cursor: pointer;
@@ -339,7 +340,8 @@ textarea:focus {
 }
 
 .btn-primary:hover {
-  background: #2c2b27;
+  background: var(--clay-strong);
+  border-color: var(--clay-strong);
 }
 
 .btn-primary:active {
@@ -357,8 +359,8 @@ textarea:focus {
   flex: none;
   padding: 4px;
   border-radius: 999px;
-  background: var(--clay);
-  color: var(--ivory);
+  background: #0c1a17;
+  color: var(--clay);
   transition: transform 0.18s ease;
 }
 
@@ -394,11 +396,11 @@ textarea:focus {
 }
 
 .status.error {
-  color: #a23b22;
+  color: #f48771;
 }
 
 .status.error::before {
-  background: #a23b22;
+  background: #f48771;
   animation: none;
 }
 
@@ -647,7 +649,7 @@ textarea:focus {
 }
 
 .schedule tbody tr:hover {
-  background: rgba(204, 120, 92, 0.06);
+  background: rgba(78, 201, 176, 0.08);
 }
 
 .t-time {
