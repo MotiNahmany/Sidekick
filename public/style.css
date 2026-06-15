@@ -110,7 +110,7 @@ body {
   border: 0;
   background: transparent;
   font: inherit;
-  font-size: 0.98rem;
+  font-size: 1.47rem; /* 50% larger than 0.98rem */
   text-align: left;
   color: var(--ink-faded);
   padding: 0.62rem 0.85rem;
