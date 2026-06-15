@@ -364,22 +364,14 @@ planForm.addEventListener("submit", async (e) => {
 //  Attorney Login — lien register (public snapshot from liens.json)
 // =====================================================================
 const LIEN_COLUMNS = [
-  { key: "SF_Account_Name", label: "Law Firm", cls: "lien-firm" },
   { key: "accid_id", label: "Account ID" },
-  { key: "Prac_Loc", label: "Practice / Loc" },
-  { key: "Regional_Mgr", label: "Regional Mgr" },
   { key: "ref_datetime", label: "Referred", type: "date" },
-  { key: "onset_date", label: "Onset", type: "date" },
-  { key: "NP_date", label: "NP Date", type: "date" },
-  { key: "last_DOS", label: "Last DOS", type: "date" },
-  { key: "num_of_accid", label: "# Accid", type: "num" },
+  { key: "Prac_Loc", label: "Practice / Loc" },
+  { key: "SF_Account_Name", label: "Law Firm", cls: "lien-firm" },
   { key: "zip_code", label: "ZIP" },
+  { key: "onset_date", label: "Onset", type: "date" },
   { key: "Lien_Form_Waived", label: "Form Waived", type: "bool" },
   { key: "Lien_Cap_Amt", label: "Lien Cap", type: "money" },
-  { key: "Contact_Name", label: "Contact" },
-  { key: "Contact_Email", label: "Contact Email" },
-  { key: "accid_Coll", label: "Collected", type: "money" },
-  { key: "accid_Adj", label: "Adjusted", type: "money" },
   { key: "accid_Bal", label: "Balance", type: "money" },
 ];
 
