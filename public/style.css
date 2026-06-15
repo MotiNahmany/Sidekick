@@ -95,6 +95,7 @@ body {
   font-weight: 500;
   font-size: 1.6rem;
   letter-spacing: -0.01em;
+  text-transform: uppercase;
   color: var(--clay);
 }
 
@@ -278,6 +279,17 @@ body {
   margin: 0;
 }
 
+/* Book Match: headline on one line spanning the column (no avatar reserve). */
+#view-book .intro {
+  padding-right: 0;
+}
+
+#view-book .intro h1 {
+  white-space: nowrap;
+  font-size: clamp(1rem, 1.9vw, 2rem);
+  line-height: 1.12;
+}
+
 /* ------------------------------------------------------------------ Form - */
 .form {
   display: flex;
@@ -401,8 +413,9 @@ textarea:focus {
 .results {
   margin-top: 2.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.25rem;
+  /* All five books side by side in a single row — no vertical scroll. */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
 .card {
@@ -721,6 +734,17 @@ textarea:focus {
 
   .intro {
     padding-right: 0;
+  }
+
+  /* Let the Book Match headline wrap and stay readable on phones. */
+  #view-book .intro h1 {
+    white-space: normal;
+    font-size: clamp(2rem, 7vw, 2.6rem);
+  }
+
+  /* Two books per row on phones (still no horizontal scroll). */
+  .results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
