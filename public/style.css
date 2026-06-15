@@ -220,6 +220,12 @@ body {
   max-width: 100%;
 }
 
+/* Top Performers keeps its original centered width (only the lien table
+   goes full-bleed). This equals the old .content inner width. */
+#view-perf .page-full {
+  max-width: calc(var(--maxw) - 2 * clamp(1.25rem, 4vw, 3rem));
+}
+
 /* Embedded Power BI report. Fills the main column (right of the sidebar);
    the report itself auto-scales (Power BI "Fit to page"). */
 .report-frame {
@@ -665,7 +671,7 @@ textarea:focus {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-top: 1.75rem;
+  margin-top: calc(1.75rem + 0.5in); /* clear Andrea's quote on the right */
 }
 
 .lien-filter-label {
