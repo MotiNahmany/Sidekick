@@ -12,8 +12,8 @@
   --slate-dark: #161617; /* footer */
   --ink: #d4d4d4; /* body text */
   --ink-faded: #9d9d9d; /* secondary text, labels */
-  --clay: #4ec9b0; /* accent (teal) */
-  --clay-strong: #6fd7c4; /* accent hover */
+  --clay: #d18b5a; /* accent (warm orange, from Andrea's skin tone) */
+  --clay-strong: #e29c69; /* accent hover */
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.2);
 
@@ -49,7 +49,7 @@ body {
 }
 
 ::selection {
-  background: rgba(78, 201, 176, 0.35);
+  background: rgba(209, 139, 90, 0.38);
 }
 
 .u-container {
@@ -319,7 +319,7 @@ textarea::placeholder {
 textarea:focus {
   outline: none;
   border-color: var(--clay);
-  box-shadow: 0 0 0 3px rgba(78, 201, 176, 0.25);
+  box-shadow: 0 0 0 3px rgba(209, 139, 90, 0.28);
 }
 
 /* Primary button — dark slate pill with a circular arrow, Anthropic-style */
@@ -330,7 +330,7 @@ textarea:focus {
   font: inherit;
   font-weight: 500;
   font-size: 1rem;
-  color: #0c1a17;
+  color: #231308;
   background: var(--clay);
   border: 1px solid var(--clay);
   border-radius: 999px;
@@ -359,7 +359,7 @@ textarea:focus {
   flex: none;
   padding: 4px;
   border-radius: 999px;
-  background: #0c1a17;
+  background: #231308;
   color: var(--clay);
   transition: transform 0.18s ease;
 }
@@ -649,7 +649,7 @@ textarea:focus {
 }
 
 .schedule tbody tr:hover {
-  background: rgba(78, 201, 176, 0.08);
+  background: rgba(209, 139, 90, 0.1);
 }
 
 .t-time {
