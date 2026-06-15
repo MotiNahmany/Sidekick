@@ -12,8 +12,8 @@
   --slate-dark: #161617; /* footer */
   --ink: #d4d4d4; /* body text */
   --ink-faded: #9d9d9d; /* secondary text, labels */
-  --clay: #d18b5a; /* accent (warm orange, from Andrea's skin tone) */
-  --clay-strong: #e29c69; /* accent hover */
+  --clay: #ff5b00; /* accent (orange) */
+  --clay-strong: #ff7a33; /* accent hover */
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.2);
 
@@ -49,7 +49,7 @@ body {
 }
 
 ::selection {
-  background: rgba(209, 139, 90, 0.38);
+  background: rgba(255, 91, 0, 0.35);
 }
 
 .u-container {
@@ -90,24 +90,12 @@ body {
   color: var(--ink);
 }
 
-.brand-top {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.nav-mark {
-  width: 22px;
-  height: 22px;
-  flex: none;
-  color: var(--clay);
-}
-
 .nav-wordmark {
   font-family: var(--font-display);
   font-weight: 500;
   font-size: 1.6rem;
   letter-spacing: -0.01em;
+  color: var(--clay);
 }
 
 .nav {
@@ -265,7 +253,7 @@ body {
 
 .kicker {
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 2.22rem; /* 3× the original 0.74rem */
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--clay);
@@ -319,7 +307,7 @@ textarea::placeholder {
 textarea:focus {
   outline: none;
   border-color: var(--clay);
-  box-shadow: 0 0 0 3px rgba(209, 139, 90, 0.28);
+  box-shadow: 0 0 0 3px rgba(255, 91, 0, 0.3);
 }
 
 /* Primary button — dark slate pill with a circular arrow, Anthropic-style */
@@ -649,7 +637,7 @@ textarea:focus {
 }
 
 .schedule tbody tr:hover {
-  background: rgba(209, 139, 90, 0.1);
+  background: rgba(255, 91, 0, 0.12);
 }
 
 .t-time {
