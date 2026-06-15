@@ -17,9 +17,10 @@
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.2);
 
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-mono: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* Book Antiqua everywhere (Palatino/Georgia fallback for non-Windows). */
+  --font-display: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-mono: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
 
   --radius-card: 20px;
   --radius-input: 14px;
@@ -110,7 +111,6 @@ body {
   border: 0;
   background: transparent;
   font: inherit;
-  font-family: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
   font-size: 1.1025rem; /* 25% smaller than 1.47rem */
   text-align: left;
   color: var(--ink-faded);
