@@ -359,3 +359,81 @@ planForm.addEventListener("submit", async (e) => {
     planSubmit.disabled = false;
   }
 });
+
+// =====================================================================
+//  Attorney Login — lien register (public snapshot from liens.json)
+// =====================================================================
+const LIEN_COLUMNS = [
+  { key: "SF_Account_Name", label: "Law Firm", cls: "lien-firm" },
+  { key: "accid_id", label: "Account ID" },
+  { key: "Prac_Loc", label: "Practice / Loc" },
+  { key: "Regional_Mgr", label: "Regional Mgr" },
+  { key: "ref_datetime", label: "Referred", type: "date" },
+  { key: "onset_date", label: "Onset", type: "date" },
+  { key: "NP_date", label: "NP Date", type: "date" },
+  { key: "last_DOS", label: "Last DOS", type: "date" },
+  { key: "num_of_accid", label: "# Accid", type: "num" },
+  { key: "zip_code", label: "ZIP" },
+  { key: "Lien_Form_Waived", label: "Form Waived", type: "bool" },
+  { key: "Lien_Cap_Amt", label: "Lien Cap", type: "money" },
+  { key: "Contact_Name", label: "Contact" },
+  { key: "Contact_Email", label: "Contact Email" },
+  { key: "accid_Coll", label: "Collected", type: "money" },
+  { key: "accid_Adj", label: "Adjusted", type: "money" },
+  { key: "accid_Bal", label: "Balance", type: "money" },
+];
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
+
+function fmtLien(col, v) {
+  if (v === null || v === undefined || v === "") return "—";
+  if (col.type === "money")
+    return "$" + Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (col.type === "date") return String(v).slice(0, 10);
+  if (col.type === "bool") return v ? "Yes" : "No";
+  return String(v);
+}
+
+let lienLoaded = false;
+async function loadLiens() {
+  const el = document.getElementById("lien-table");
+  const status = document.getElementById("lien-status");
+  if (lienLoaded || !el) return;
+  lienLoaded = true;
+  if (status) showStatus(status, "Loading lien register…");
+  try {
+    const res = await fetch("liens.json");
+    if (!res.ok) throw new Error("Could not load lien data.");
+    const rows = await res.json();
+    const head = LIEN_COLUMNS.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("");
+    const body = rows
+      .map((r) => {
+        const cells = LIEN_COLUMNS.map((c) => {
+          const cls = [c.cls, c.type === "money" || c.type === "num" ? "num" : ""]
+            .filter(Boolean)
+            .join(" ");
+          return `<td${cls ? ` class="${cls}"` : ""}>${escapeHtml(fmtLien(c, r[c.key]))}</td>`;
+        }).join("");
+        return `<tr>${cells}</tr>`;
+      })
+      .join("");
+    el.innerHTML = `<table class="lien-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    if (status) showStatus(status, null);
+  } catch (err) {
+    lienLoaded = false;
+    if (status) showStatus(status, err.message, true);
+  }
+}
+
+// Load the register when the Attorney Login tab is opened (or deep-linked).
+document
+  .querySelectorAll('.nav-btn[data-view="login"]')
+  .forEach((b) => b.addEventListener("click", loadLiens));
+window.addEventListener("hashchange", () => {
+  if (location.hash.slice(1) === "login") loadLiens();
+});
+if (location.hash.slice(1) === "login") loadLiens();

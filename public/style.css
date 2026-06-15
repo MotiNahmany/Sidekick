@@ -660,6 +660,58 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+/* -------------------------------------------------------- Lien register - */
+.lien-wrap {
+  margin-top: 2.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--oat);
+}
+
+.lien-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.lien-table thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faded);
+  background: var(--oat-deep);
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.lien-table tbody td {
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.lien-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.lien-table tbody tr:hover {
+  background: rgba(255, 91, 0, 0.08);
+}
+
+.lien-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lien-table .lien-firm {
+  color: var(--clay);
+}
+
 /* ---------------------------------------------------------------- Footer - */
 .site-footer {
   background: var(--slate-dark);
