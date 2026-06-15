@@ -188,12 +188,6 @@ body {
   padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.25rem, 4vw, 3rem) 5rem;
 }
 
-/* Keep the intro headings clear of the avatar on wider screens. */
-@media (min-width: 760px) {
-  .intro {
-    padding-right: clamp(170px, 20vw, 275px);
-  }
-}
 
 .view {
   display: none;
@@ -265,8 +259,9 @@ body {
 .intro h1 {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(2.2rem, 5.5vw, 3.5rem);
-  line-height: 1.05;
+  white-space: nowrap; /* single-line headline, matching Book Match */
+  font-size: clamp(1rem, 1.9vw, 2rem);
+  line-height: 1.12;
   letter-spacing: -0.02em;
   margin: 0 0 1.1rem;
   color: var(--ink);
@@ -280,15 +275,9 @@ body {
   margin: 0;
 }
 
-/* Book Match: headline on one line spanning the column (no avatar reserve). */
-#view-book .intro {
+/* Headlines span the column on one line; no avatar reservation. */
+.intro {
   padding-right: 0;
-}
-
-#view-book .intro h1 {
-  white-space: nowrap;
-  font-size: clamp(1rem, 1.9vw, 2rem);
-  line-height: 1.12;
 }
 
 /* ------------------------------------------------------------------ Form - */
@@ -737,8 +726,8 @@ textarea:focus {
     padding-right: 0;
   }
 
-  /* Let the Book Match headline wrap and stay readable on phones. */
-  #view-book .intro h1 {
+  /* Let headlines wrap and stay readable on phones. */
+  .intro h1 {
     white-space: normal;
     font-size: clamp(2rem, 7vw, 2.6rem);
   }
