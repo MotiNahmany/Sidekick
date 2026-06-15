@@ -110,6 +110,7 @@ body {
   border: 0;
   background: transparent;
   font: inherit;
+  font-family: "Book Antiqua", "Palatino Linotype", Palatino, Georgia, serif;
   font-size: 1.1025rem; /* 25% smaller than 1.47rem */
   text-align: left;
   color: var(--ink-faded);
