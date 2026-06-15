@@ -2,7 +2,7 @@
 const navButtons = document.querySelectorAll(".nav-btn");
 const views = document.querySelectorAll(".view");
 
-const VIEWS = ["book", "plan", "perf"];
+const VIEWS = ["book", "plan", "perf", "login"];
 
 function showView(name) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
