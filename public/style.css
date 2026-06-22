@@ -774,9 +774,9 @@ textarea:focus {
   color: var(--ink-faded);
 }
 
-/* Match the doubled table font on the "gathering headlines…" status line. */
+/* Match the table font on the "gathering headlines…" status line. */
 #news-status {
-  font-size: 1.7rem;
+  font-size: 1.408rem;
 }
 
 .news-wrap {
@@ -791,14 +791,14 @@ textarea:focus {
 .news-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 1.76rem;
+  font-size: 1.408rem;
 }
 
 .news-table thead th {
   position: sticky;
   top: 0;
   text-align: left;
-  font-size: 0.72rem;
+  font-size: 1.408rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink-faded);
