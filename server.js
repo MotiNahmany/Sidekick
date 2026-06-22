@@ -13,7 +13,8 @@ const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 // Set the env var MAINTENANCE=on (in Render → Environment) to take the whole
 // site offline behind a "back soon" page; set it to off (or remove it) to
 // resume. Evaluated at startup, so a change triggers a redeploy/restart.
-const MAINTENANCE = /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
+// FORCED OFFLINE 2026-06-22 — remove the `true ||` below to restore normal service.
+const MAINTENANCE = true || /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
 
 const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
