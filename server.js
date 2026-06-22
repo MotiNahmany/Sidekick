@@ -171,16 +171,16 @@ app.post("/api/plan", async (req, res) => {
 });
 
 // =====================================================================
-//  Trading News — web-searched, market-moving headlines
+//  News feeds — Trading News + Claude News (web-searched, cached, refreshed)
 // =====================================================================
 // Claude searches the web (server-side web_search tool), returns the items as
-// a JSON block, and the result is cached in memory and refreshed on a
-// 10-minute interval. The frontend polls /api/news.
+// a JSON block, and each feed is cached in memory and refreshed on a 10-minute
+// interval. The frontend polls /api/news and /api/claude-news.
 //
 // Uses the basic web_search_20250305 variant (not _20260209): the dynamic-
 // filtering variant runs code execution under the hood, which burns the search
 // quota before results return and yields an empty list.
-const NEWS_PROMPT =
+const TRADING_NEWS_PROMPT =
   "Search the web for the most recent news events that move financial markets — " +
   "economic data and central-bank actions (BLS jobs/CPI/PPI, Fed/ECB/BOJ decisions), " +
   "geopolitical developments, and major corporate or commodity headlines — that affect " +
@@ -191,6 +191,18 @@ const NEWS_PROMPT =
   'of the form {"items":[{"date":"<ISO 8601 UTC date-time>","source":"<publisher or issuing body>",' +
   '"summary":"<at most 3 short lines; lead with the key numbers (actual vs expected/prior) and the ' +
   'expected market impact>"}]}. Order items newest first.';
+
+const CLAUDE_NEWS_PROMPT =
+  "Search the web for the latest news from and about Anthropic — new model releases and " +
+  "updates (Claude Opus / Sonnet / Haiku / Fable versions), product launches and features " +
+  "(Claude Code, the API, the apps), research and safety publications, and company news " +
+  "(funding, partnerships, leadership, policy), plus notable third-party coverage or " +
+  "commentary about Anthropic and Claude.\n\n" +
+  "Find 12–15 of the most recent and significant items from roughly the last 1–2 weeks. " +
+  "Prefer concrete, dated, verifiable items, and use only real reporting (no speculation).\n\n" +
+  "When done, respond with ONLY a JSON object inside a ```json code block, no prose outside it, " +
+  'of the form {"items":[{"date":"<ISO 8601 UTC date-time>","source":"<publisher, or Anthropic>",' +
+  '"summary":"<at most 3 short lines; what is new and why it matters>"}]}. Order items newest first.';
 
 const NEWS_REQUEST = {
   model: "claude-opus-4-8",
@@ -215,53 +227,65 @@ function parseNewsItems(text) {
   return Array.isArray(parsed.items) ? parsed.items : [];
 }
 
-let newsCache = { items: [], updatedAt: null, error: null };
-let newsRefreshing = false;
-
-async function refreshNews() {
-  if (newsRefreshing) return;
-  newsRefreshing = true;
-  try {
-    const messages = [{ role: "user", content: NEWS_PROMPT }];
-    let response = await client.messages.create({ ...NEWS_REQUEST, messages });
-
-    // Server-side tool loops can hit their iteration cap and pause; resume.
-    let guard = 0;
-    while (response.stop_reason === "pause_turn" && guard++ < 5) {
-      messages.push({ role: "assistant", content: response.content });
-      response = await client.messages.create({ ...NEWS_REQUEST, messages });
-    }
-
-    const text = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-    const items = parseNewsItems(text);
-    // Newest first.
-    items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-    if (items.length) {
-      newsCache = { items, updatedAt: new Date().toISOString(), error: null };
-    } else {
-      // Keep the last good batch; note that this refresh found nothing.
-      newsCache = { ...newsCache, updatedAt: new Date().toISOString() };
-    }
-    console.log(`Trading News refreshed: ${items.length} items at ${newsCache.updatedAt}`);
-  } catch (err) {
-    console.error("Trading News refresh failed:", err.message);
-    newsCache = { ...newsCache, error: "Could not refresh trading news." };
-  } finally {
-    newsRefreshing = false;
+// Run one web-search pass for the given prompt and return the parsed, newest-
+// first items. Resumes across server-tool pauses.
+async function gatherNews(prompt) {
+  const messages = [{ role: "user", content: prompt }];
+  let response = await client.messages.create({ ...NEWS_REQUEST, messages });
+  let guard = 0;
+  while (response.stop_reason === "pause_turn" && guard++ < 5) {
+    messages.push({ role: "assistant", content: response.content });
+    response = await client.messages.create({ ...NEWS_REQUEST, messages });
   }
+  const text = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+  const items = parseNewsItems(text);
+  items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  return items;
 }
 
-app.get("/api/news", (req, res) => res.json(newsCache));
+// A cached, self-refreshing news feed. `label` is used in logs/error text.
+function makeNewsFeed(label, prompt) {
+  let cache = { items: [], updatedAt: null, error: null };
+  let refreshing = false;
+  async function refresh() {
+    if (refreshing) return;
+    refreshing = true;
+    try {
+      const items = await gatherNews(prompt);
+      if (items.length) {
+        cache = { items, updatedAt: new Date().toISOString(), error: null };
+      } else {
+        // Keep the last good batch; note that this refresh found nothing.
+        cache = { ...cache, updatedAt: new Date().toISOString() };
+      }
+      console.log(`${label} refreshed: ${items.length} items at ${cache.updatedAt}`);
+    } catch (err) {
+      console.error(`${label} refresh failed:`, err.message);
+      cache = { ...cache, error: `Could not refresh ${label.toLowerCase()}.` };
+    } finally {
+      refreshing = false;
+    }
+  }
+  return { get: () => cache, refresh };
+}
+
+const tradingNews = makeNewsFeed("Trading News", TRADING_NEWS_PROMPT);
+const claudeNews = makeNewsFeed("Claude News", CLAUDE_NEWS_PROMPT);
+
+app.get("/api/news", (req, res) => res.json(tradingNews.get()));
+app.get("/api/claude-news", (req, res) => res.json(claudeNews.get()));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Book recommender running at http://localhost:${PORT}`);
-  // Refresh now, then every 10 minutes. Skipped while in maintenance mode.
+  // Refresh each feed now, then every 10 minutes. Skipped in maintenance mode.
   if (!MAINTENANCE) {
-    refreshNews();
-    setInterval(refreshNews, 10 * 60 * 1000);
+    tradingNews.refresh();
+    claudeNews.refresh();
+    setInterval(() => tradingNews.refresh(), 10 * 60 * 1000);
+    setInterval(() => claudeNews.refresh(), 10 * 60 * 1000);
   }
 });

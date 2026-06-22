@@ -776,7 +776,8 @@ textarea:focus {
 }
 
 /* Match the table font on the "gathering headlines…" status line. */
-#news-status {
+#news-status,
+#claude-status {
   font-size: 1.1968rem;
 }
 

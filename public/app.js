@@ -2,7 +2,7 @@
 const navButtons = document.querySelectorAll(".nav-btn");
 const views = document.querySelectorAll(".view");
 
-const VIEWS = ["book", "plan", "perf", "news", "login"];
+const VIEWS = ["book", "plan", "perf", "news", "claude", "login"];
 
 function showView(name) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
@@ -11,9 +11,11 @@ function showView(name) {
   // Start the Power BI auto-refresh only while its tab is showing.
   if (name === "perf") startReportRefresh();
   else stopReportRefresh();
-  // Start the Trading News auto-refresh only while its tab is showing.
-  if (name === "news") startNewsRefresh();
-  else stopNewsRefresh();
+  // Start each news feed's auto-refresh only while its tab is showing.
+  if (name === "news") startFeed(tradingFeed);
+  else stopFeed(tradingFeed);
+  if (name === "claude") startFeed(claudeFeed);
+  else stopFeed(claudeFeed);
 }
 
 navButtons.forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
@@ -29,9 +31,27 @@ window.addEventListener("hashchange", () => {
 const reportFrame = document.getElementById("perf-report");
 let reportTimer = null;
 
-// Trading News state (declared early — showView() touches these on first load).
-let newsTimer = null;
-let newsLoadedOnce = false;
+// News-feed configs (declared early — showView() touches these on first load).
+// Both the Trading News and Claude News tabs share the same render/poll code;
+// only the endpoint, label, and element ids differ.
+const tradingFeed = {
+  endpoint: "/api/news",
+  label: "trading news",
+  tableId: "news-table",
+  statusId: "news-status",
+  updatedId: "news-updated",
+  timer: null,
+  loadedOnce: false,
+};
+const claudeFeed = {
+  endpoint: "/api/claude-news",
+  label: "Claude news",
+  tableId: "claude-table",
+  statusId: "claude-status",
+  updatedId: "claude-updated",
+  timer: null,
+  loadedOnce: false,
+};
 
 function loadReport() {
   if (reportFrame) reportFrame.src = reportFrame.dataset.src;
@@ -465,7 +485,7 @@ window.addEventListener("hashchange", () => {
 if (location.hash.slice(1) === "login") loadLiens();
 
 // =====================================================================
-//  Trading News — market-moving headlines (server-refreshed via /api/news)
+//  News feeds — Trading News + Claude News (server-refreshed; polled here)
 // =====================================================================
 function newsTableHtml(items) {
   const body = items
@@ -497,15 +517,15 @@ function fmtNewsDate(v) {
   });
 }
 
-async function loadNews() {
-  const table = document.getElementById("news-table");
-  const status = document.getElementById("news-status");
-  const updated = document.getElementById("news-updated");
+async function loadFeed(feed) {
+  const table = document.getElementById(feed.tableId);
+  const status = document.getElementById(feed.statusId);
+  const updated = document.getElementById(feed.updatedId);
   if (!table) return;
-  if (!newsLoadedOnce && status) showStatus(status, "Loading trading news…");
+  if (!feed.loadedOnce && status) showStatus(status, `Loading ${feed.label}…`);
   try {
-    const res = await fetch("/api/news");
-    if (!res.ok) throw new Error("Could not load trading news.");
+    const res = await fetch(feed.endpoint);
+    if (!res.ok) throw new Error(`Could not load ${feed.label}.`);
     const data = await res.json();
     const items = data.items || [];
     if (!items.length) {
@@ -525,25 +545,26 @@ async function loadNews() {
         ? `Updated ${fmtNewsDate(data.updatedAt)} · ${items.length} items`
         : "";
     }
-    newsLoadedOnce = true;
+    feed.loadedOnce = true;
   } catch (err) {
     if (status) showStatus(status, err.message, true);
   }
 }
 
-// Poll while the Trading News tab is open. The server refreshes the underlying
-// data every 10 minutes; the client re-fetches on the same cadence.
-function startNewsRefresh() {
-  loadNews();
-  if (newsTimer) return;
-  newsTimer = setInterval(loadNews, 10 * 60 * 1000);
+// Poll while a news tab is open. The server refreshes the underlying data every
+// 10 minutes; the client re-fetches on the same cadence.
+function startFeed(feed) {
+  loadFeed(feed);
+  if (feed.timer) return;
+  feed.timer = setInterval(() => loadFeed(feed), 10 * 60 * 1000);
 }
-function stopNewsRefresh() {
-  if (newsTimer) {
-    clearInterval(newsTimer);
-    newsTimer = null;
+function stopFeed(feed) {
+  if (feed.timer) {
+    clearInterval(feed.timer);
+    feed.timer = null;
   }
 }
 
-// Restore the Trading News tab on deep-link.
-if (location.hash.slice(1) === "news") startNewsRefresh();
+// Restore a news tab on deep-link.
+if (location.hash.slice(1) === "news") startFeed(tradingFeed);
+if (location.hash.slice(1) === "claude") startFeed(claudeFeed);

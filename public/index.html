@@ -21,6 +21,7 @@
           <button class="nav-btn" data-view="plan" type="button">Plan My Day</button>
           <button class="nav-btn" data-view="perf" type="button">Top Performers</button>
           <button class="nav-btn" data-view="news" type="button">Trading News</button>
+          <button class="nav-btn" data-view="claude" type="button">Claude News</button>
           <button class="nav-btn" data-view="login" type="button">Attorney Login</button>
         </nav>
 
@@ -172,7 +173,23 @@
         </div>
       </section>
 
-      <!-- View 5: Attorney Login (clean placeholder; firm/attorney selector + SQL table to come) -->
+      <!-- View 5: Claude News (web-searched Anthropic / Claude headlines) -->
+      <section id="view-claude" class="view">
+        <div class="page page-full">
+          <header class="intro">
+            <p class="kicker">Claude News</p>
+            <h1>Everything new from and about Anthropic.</h1>
+            <p class="sub">Anthropic announcements, Claude model and version updates, research and safety work, and notable coverage — refreshed every 10 minutes.</p>
+          </header>
+          <div class="news-controls">
+            <span id="claude-updated" class="news-updated"></span>
+          </div>
+          <section id="claude-status" class="status" hidden></section>
+          <div id="claude-table" class="news-wrap"></div>
+        </div>
+      </section>
+
+      <!-- View 6: Attorney Login (clean placeholder; firm/attorney selector + SQL table to come) -->
       <section id="view-login" class="view">
         <div class="page page-full">
           <header class="intro">
