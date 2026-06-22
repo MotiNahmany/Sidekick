@@ -774,6 +774,11 @@ textarea:focus {
   color: var(--ink-faded);
 }
 
+/* Match the doubled table font on the "gathering headlines…" status line. */
+#news-status {
+  font-size: 1.7rem;
+}
+
 .news-wrap {
   margin-top: 1.25rem;
   max-height: 68vh;
