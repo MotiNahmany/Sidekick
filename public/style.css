@@ -265,7 +265,7 @@ body {
   font-family: var(--font-display);
   font-weight: 400;
   white-space: nowrap; /* single-line headline, matching Book Match */
-  font-size: clamp(1rem, 1.9vw, 2rem);
+  font-size: 1.6rem; /* same height as the ANDREA BLAKE pane title */
   line-height: 1.12;
   letter-spacing: -0.02em;
   margin: 0 0 1.1rem;
