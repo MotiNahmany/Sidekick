@@ -776,7 +776,7 @@ textarea:focus {
 
 /* Match the table font on the "gathering headlines…" status line. */
 #news-status {
-  font-size: 1.408rem;
+  font-size: 1.1968rem;
 }
 
 .news-wrap {
@@ -791,14 +791,14 @@ textarea:focus {
 .news-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 1.408rem;
+  font-size: 1.1968rem;
 }
 
 .news-table thead th {
   position: sticky;
   top: 0;
   text-align: left;
-  font-size: 1.408rem;
+  font-size: 1.1968rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink-faded);
