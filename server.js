@@ -338,13 +338,11 @@ app.get("/api/github-trending", (req, res) => res.json(githubTrending.get()));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Book recommender running at http://localhost:${PORT}`);
-  // Refresh each feed now, then every 10 minutes. Skipped in maintenance mode.
+  // Fetch each feed once at startup, then keep that latest batch fixed
+  // (no periodic refresh). Skipped in maintenance mode.
   if (!MAINTENANCE) {
     tradingNews.refresh();
     claudeNews.refresh();
     githubTrending.refresh();
-    setInterval(() => tradingNews.refresh(), 10 * 60 * 1000);
-    setInterval(() => claudeNews.refresh(), 10 * 60 * 1000);
-    setInterval(() => githubTrending.refresh(), 10 * 60 * 1000);
   }
 });

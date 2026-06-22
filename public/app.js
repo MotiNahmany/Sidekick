@@ -568,12 +568,10 @@ async function loadFeed(feed) {
   }
 }
 
-// Poll while a news tab is open. The server refreshes the underlying data every
-// 10 minutes; the client re-fetches on the same cadence.
+// Load the feed once when its tab opens. The server holds a fixed latest batch,
+// so there is no periodic re-fetch.
 function startFeed(feed) {
   loadFeed(feed);
-  if (feed.timer) return;
-  feed.timer = setInterval(() => loadFeed(feed), 10 * 60 * 1000);
 }
 function stopFeed(feed) {
   if (feed.timer) {
