@@ -2,7 +2,7 @@
 const navButtons = document.querySelectorAll(".nav-btn");
 const views = document.querySelectorAll(".view");
 
-const VIEWS = ["book", "plan", "perf", "login"];
+const VIEWS = ["book", "plan", "perf", "news", "login"];
 
 function showView(name) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
@@ -11,6 +11,9 @@ function showView(name) {
   // Start the Power BI auto-refresh only while its tab is showing.
   if (name === "perf") startReportRefresh();
   else stopReportRefresh();
+  // Start the Trading News auto-refresh only while its tab is showing.
+  if (name === "news") startNewsRefresh();
+  else stopNewsRefresh();
 }
 
 navButtons.forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
@@ -25,6 +28,10 @@ window.addEventListener("hashchange", () => {
 // Power BI service holds (it does not trigger a dataset refresh).
 const reportFrame = document.getElementById("perf-report");
 let reportTimer = null;
+
+// Trading News state (declared early — showView() touches these on first load).
+let newsTimer = null;
+let newsLoadedOnce = false;
 
 function loadReport() {
   if (reportFrame) reportFrame.src = reportFrame.dataset.src;
@@ -456,3 +463,87 @@ window.addEventListener("hashchange", () => {
   if (location.hash.slice(1) === "login") loadLiens();
 });
 if (location.hash.slice(1) === "login") loadLiens();
+
+// =====================================================================
+//  Trading News — market-moving headlines (server-refreshed via /api/news)
+// =====================================================================
+function newsTableHtml(items) {
+  const body = items
+    .map((it) => {
+      const date = escapeHtml(fmtNewsDate(it.date));
+      const source = escapeHtml(it.source || "—");
+      const summary = escapeHtml(it.summary || "—").replace(/\n/g, "<br>");
+      return `<tr><td class="news-date">${date}</td><td class="news-source">${source}</td><td class="news-summary">${summary}</td></tr>`;
+    })
+    .join("");
+  return (
+    '<table class="news-table"><thead><tr>' +
+    "<th>Date</th><th>Source</th><th>Summary</th>" +
+    `</tr></thead><tbody>${body}</tbody></table>`
+  );
+}
+
+function fmtNewsDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (isNaN(d)) return String(v);
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZoneName: "short",
+  });
+}
+
+async function loadNews() {
+  const table = document.getElementById("news-table");
+  const status = document.getElementById("news-status");
+  const updated = document.getElementById("news-updated");
+  if (!table) return;
+  if (!newsLoadedOnce && status) showStatus(status, "Loading trading news…");
+  try {
+    const res = await fetch("/api/news");
+    if (!res.ok) throw new Error("Could not load trading news.");
+    const data = await res.json();
+    const items = data.items || [];
+    if (!items.length) {
+      table.innerHTML = "";
+      if (status)
+        showStatus(
+          status,
+          data.error || "Gathering the latest headlines — check back in a moment.",
+          !!data.error
+        );
+    } else {
+      table.innerHTML = newsTableHtml(items);
+      if (status) showStatus(status, null);
+    }
+    if (updated) {
+      updated.textContent = data.updatedAt
+        ? `Updated ${fmtNewsDate(data.updatedAt)} · ${items.length} items`
+        : "";
+    }
+    newsLoadedOnce = true;
+  } catch (err) {
+    if (status) showStatus(status, err.message, true);
+  }
+}
+
+// Poll while the Trading News tab is open. The server refreshes the underlying
+// data every 10 minutes; the client re-fetches on the same cadence.
+function startNewsRefresh() {
+  loadNews();
+  if (newsTimer) return;
+  newsTimer = setInterval(loadNews, 10 * 60 * 1000);
+}
+function stopNewsRefresh() {
+  if (newsTimer) {
+    clearInterval(newsTimer);
+    newsTimer = null;
+  }
+}
+
+// Restore the Trading News tab on deep-link.
+if (location.hash.slice(1) === "news") startNewsRefresh();

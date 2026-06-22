@@ -170,5 +170,98 @@ app.post("/api/plan", async (req, res) => {
   }
 });
 
+// =====================================================================
+//  Trading News — web-searched, market-moving headlines
+// =====================================================================
+// Claude searches the web (server-side web_search tool), returns the items as
+// a JSON block, and the result is cached in memory and refreshed on a
+// 10-minute interval. The frontend polls /api/news.
+//
+// Uses the basic web_search_20250305 variant (not _20260209): the dynamic-
+// filtering variant runs code execution under the hood, which burns the search
+// quota before results return and yields an empty list.
+const NEWS_PROMPT =
+  "Search the web for the most recent news events that move financial markets — " +
+  "economic data and central-bank actions (BLS jobs/CPI/PPI, Fed/ECB/BOJ decisions), " +
+  "geopolitical developments, and major corporate or commodity headlines — that affect " +
+  "stocks, bonds, futures, currencies, commodities, Bitcoin, and alternative assets.\n\n" +
+  "Find 12–15 of the highest-impact items from roughly the last 3–4 days. Prefer concrete, " +
+  "numeric, recent items over vague commentary, and use only real, verifiable reporting.\n\n" +
+  "When done, respond with ONLY a JSON object inside a ```json code block, no prose outside it, " +
+  'of the form {"items":[{"date":"<ISO 8601 UTC date-time>","source":"<publisher or issuing body>",' +
+  '"summary":"<at most 3 short lines; lead with the key numbers (actual vs expected/prior) and the ' +
+  'expected market impact>"}]}. Order items newest first.';
+
+const NEWS_REQUEST = {
+  model: "claude-opus-4-8",
+  max_tokens: 8000,
+  tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 12 }],
+};
+
+// Pull the items array out of the model's final text (a ```json fence, or the
+// first balanced {...} as a fallback).
+function parseNewsItems(text) {
+  let jsonStr = null;
+  const fence = text.match(/```json\s*([\s\S]*?)```/i) || text.match(/```\s*([\s\S]*?)```/);
+  if (fence) {
+    jsonStr = fence[1];
+  } else {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start !== -1 && end > start) jsonStr = text.slice(start, end + 1);
+  }
+  if (!jsonStr) return [];
+  const parsed = JSON.parse(jsonStr);
+  return Array.isArray(parsed.items) ? parsed.items : [];
+}
+
+let newsCache = { items: [], updatedAt: null, error: null };
+let newsRefreshing = false;
+
+async function refreshNews() {
+  if (newsRefreshing) return;
+  newsRefreshing = true;
+  try {
+    const messages = [{ role: "user", content: NEWS_PROMPT }];
+    let response = await client.messages.create({ ...NEWS_REQUEST, messages });
+
+    // Server-side tool loops can hit their iteration cap and pause; resume.
+    let guard = 0;
+    while (response.stop_reason === "pause_turn" && guard++ < 5) {
+      messages.push({ role: "assistant", content: response.content });
+      response = await client.messages.create({ ...NEWS_REQUEST, messages });
+    }
+
+    const text = response.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
+    const items = parseNewsItems(text);
+    // Newest first.
+    items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    if (items.length) {
+      newsCache = { items, updatedAt: new Date().toISOString(), error: null };
+    } else {
+      // Keep the last good batch; note that this refresh found nothing.
+      newsCache = { ...newsCache, updatedAt: new Date().toISOString() };
+    }
+    console.log(`Trading News refreshed: ${items.length} items at ${newsCache.updatedAt}`);
+  } catch (err) {
+    console.error("Trading News refresh failed:", err.message);
+    newsCache = { ...newsCache, error: "Could not refresh trading news." };
+  } finally {
+    newsRefreshing = false;
+  }
+}
+
+app.get("/api/news", (req, res) => res.json(newsCache));
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Book recommender running at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Book recommender running at http://localhost:${PORT}`);
+  // Refresh now, then every 10 minutes. Skipped while in maintenance mode.
+  if (!MAINTENANCE) {
+    refreshNews();
+    setInterval(refreshNews, 10 * 60 * 1000);
+  }
+});
