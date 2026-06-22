@@ -777,8 +777,25 @@ textarea:focus {
 
 /* Match the table font on the "gathering headlines…" status line. */
 #news-status,
-#claude-status {
+#claude-status,
+#github-status {
   font-size: 1.1968rem;
+}
+
+/* GitHub Trending cells (reuses .news-table). */
+.news-table .gh-repo {
+  white-space: nowrap;
+}
+.news-table .gh-repo a {
+  color: var(--clay);
+  text-decoration: none;
+}
+.news-table .gh-repo a:hover {
+  text-decoration: underline;
+}
+.news-table .gh-meta {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .news-wrap {

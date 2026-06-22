@@ -246,15 +246,70 @@ async function gatherNews(prompt) {
   return items;
 }
 
-// A cached, self-refreshing news feed. `label` is used in logs/error text.
-function makeNewsFeed(label, prompt) {
+// ----- GitHub Trending -------------------------------------------------
+// Fetched and parsed directly from the (server-rendered) trending page — fast,
+// free, and deterministic, no model call needed. Same cache/refresh shape as
+// the news feeds below.
+function decodeEntities(s) {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
+}
+
+function htmlToText(html) {
+  return decodeEntities(html.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+}
+
+function parseGithubTrending(html) {
+  const items = [];
+  const blocks = html.split('<article class="Box-row">').slice(1);
+  for (const block of blocks) {
+    const hrefM = block.match(/<h2[^>]*>[\s\S]*?<a[^>]*href="\/([^"]+)"/);
+    if (!hrefM) continue;
+    const repo = hrefM[1].replace(/\s+/g, "");
+    const descM = block.match(/<p[^>]*class="[^"]*col-9[^"]*"[^>]*>([\s\S]*?)<\/p>/);
+    const langM = block.match(/<span[^>]*itemprop="programmingLanguage"[^>]*>([^<]+)<\/span>/);
+    const starsM = block.match(/href="\/[^"]+\/stargazers"[^>]*>([\s\S]*?)<\/a>/);
+    const todayM = block.match(/([\d,]+)\s+stars\s+(?:today|this week|this month)/);
+    items.push({
+      repo,
+      url: `https://github.com/${repo}`,
+      description: descM ? htmlToText(descM[1]) : "",
+      language: langM ? decodeEntities(langM[1]).trim() : "",
+      stars: starsM ? (htmlToText(starsM[1]).match(/[\d,]+/) || [""])[0] : "",
+      starsToday: todayM ? todayM[1] : "",
+    });
+    if (items.length >= 25) break;
+  }
+  return items;
+}
+
+async function gatherGithubTrending() {
+  const res = await fetch("https://github.com/trending", {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (compatible; SidekickBot/1.0; +https://andreablake.ai)",
+      Accept: "text/html",
+    },
+  });
+  if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
+  return parseGithubTrending(await res.text());
+}
+
+// A cached, self-refreshing feed. `label` is used in logs/error text; `gather`
+// is an async function returning the items array (web search, scrape, etc.).
+function makeFeed(label, gather) {
   let cache = { items: [], updatedAt: null, error: null };
   let refreshing = false;
   async function refresh() {
     if (refreshing) return;
     refreshing = true;
     try {
-      const items = await gatherNews(prompt);
+      const items = await gather();
       if (items.length) {
         cache = { items, updatedAt: new Date().toISOString(), error: null };
       } else {
@@ -272,11 +327,13 @@ function makeNewsFeed(label, prompt) {
   return { get: () => cache, refresh };
 }
 
-const tradingNews = makeNewsFeed("Trading News", TRADING_NEWS_PROMPT);
-const claudeNews = makeNewsFeed("Claude News", CLAUDE_NEWS_PROMPT);
+const tradingNews = makeFeed("Trading News", () => gatherNews(TRADING_NEWS_PROMPT));
+const claudeNews = makeFeed("Claude News", () => gatherNews(CLAUDE_NEWS_PROMPT));
+const githubTrending = makeFeed("GitHub Trending", gatherGithubTrending);
 
 app.get("/api/news", (req, res) => res.json(tradingNews.get()));
 app.get("/api/claude-news", (req, res) => res.json(claudeNews.get()));
+app.get("/api/github-trending", (req, res) => res.json(githubTrending.get()));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -285,7 +342,9 @@ app.listen(PORT, () => {
   if (!MAINTENANCE) {
     tradingNews.refresh();
     claudeNews.refresh();
+    githubTrending.refresh();
     setInterval(() => tradingNews.refresh(), 10 * 60 * 1000);
     setInterval(() => claudeNews.refresh(), 10 * 60 * 1000);
+    setInterval(() => githubTrending.refresh(), 10 * 60 * 1000);
   }
 });

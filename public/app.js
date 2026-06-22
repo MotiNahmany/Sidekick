@@ -2,7 +2,7 @@
 const navButtons = document.querySelectorAll(".nav-btn");
 const views = document.querySelectorAll(".view");
 
-const VIEWS = ["book", "plan", "perf", "news", "claude", "login"];
+const VIEWS = ["book", "plan", "perf", "news", "claude", "github", "login"];
 
 function showView(name) {
   navButtons.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
@@ -11,11 +11,13 @@ function showView(name) {
   // Start the Power BI auto-refresh only while its tab is showing.
   if (name === "perf") startReportRefresh();
   else stopReportRefresh();
-  // Start each news feed's auto-refresh only while its tab is showing.
+  // Start each feed's auto-refresh only while its tab is showing.
   if (name === "news") startFeed(tradingFeed);
   else stopFeed(tradingFeed);
   if (name === "claude") startFeed(claudeFeed);
   else stopFeed(claudeFeed);
+  if (name === "github") startFeed(githubFeed);
+  else stopFeed(githubFeed);
 }
 
 navButtons.forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
@@ -31,15 +33,17 @@ window.addEventListener("hashchange", () => {
 const reportFrame = document.getElementById("perf-report");
 let reportTimer = null;
 
-// News-feed configs (declared early — showView() touches these on first load).
-// Both the Trading News and Claude News tabs share the same render/poll code;
-// only the endpoint, label, and element ids differ.
+// Feed configs (declared early — showView() touches these on first load).
+// The Trading News, Claude News, and GitHub Trending tabs share the same
+// poll/refresh code; only the endpoint, render function, and element ids differ.
 const tradingFeed = {
   endpoint: "/api/news",
   label: "trading news",
   tableId: "news-table",
   statusId: "news-status",
   updatedId: "news-updated",
+  render: newsTableHtml,
+  unit: "items",
   timer: null,
   loadedOnce: false,
 };
@@ -49,6 +53,19 @@ const claudeFeed = {
   tableId: "claude-table",
   statusId: "claude-status",
   updatedId: "claude-updated",
+  render: newsTableHtml,
+  unit: "items",
+  timer: null,
+  loadedOnce: false,
+};
+const githubFeed = {
+  endpoint: "/api/github-trending",
+  label: "GitHub trending",
+  tableId: "github-table",
+  statusId: "github-status",
+  updatedId: "github-updated",
+  render: githubTableHtml,
+  unit: "repos",
   timer: null,
   loadedOnce: false,
 };
@@ -537,12 +554,12 @@ async function loadFeed(feed) {
           !!data.error
         );
     } else {
-      table.innerHTML = newsTableHtml(items);
+      table.innerHTML = feed.render(items);
       if (status) showStatus(status, null);
     }
     if (updated) {
       updated.textContent = data.updatedAt
-        ? `Updated ${fmtNewsDate(data.updatedAt)} · ${items.length} items`
+        ? `Updated ${fmtNewsDate(data.updatedAt)} · ${items.length} ${feed.unit}`
         : "";
     }
     feed.loadedOnce = true;
@@ -565,6 +582,31 @@ function stopFeed(feed) {
   }
 }
 
-// Restore a news tab on deep-link.
+// GitHub Trending uses its own columns (repo / description / language / stars).
+function githubTableHtml(items) {
+  const body = items
+    .map((it) => {
+      const repo = escapeHtml(it.repo || "—");
+      const url = escapeHtml(it.url || "#");
+      const description = escapeHtml(it.description || "—");
+      const language = escapeHtml(it.language || "—");
+      const stars = escapeHtml(it.stars || "—");
+      const today = escapeHtml(it.starsToday ? `${it.starsToday} today` : "—");
+      return (
+        `<tr><td class="gh-repo"><a href="${url}" target="_blank" rel="noopener noreferrer">${repo}</a></td>` +
+        `<td class="news-summary">${description}</td>` +
+        `<td class="gh-meta">${language}</td><td class="gh-meta">${stars}</td><td class="gh-meta">${today}</td></tr>`
+      );
+    })
+    .join("");
+  return (
+    '<table class="news-table"><thead><tr>' +
+    "<th>Repository</th><th>Description</th><th>Language</th><th>Stars</th><th>Stars today</th>" +
+    `</tr></thead><tbody>${body}</tbody></table>`
+  );
+}
+
+// Restore a feed tab on deep-link.
 if (location.hash.slice(1) === "news") startFeed(tradingFeed);
 if (location.hash.slice(1) === "claude") startFeed(claudeFeed);
+if (location.hash.slice(1) === "github") startFeed(githubFeed);
