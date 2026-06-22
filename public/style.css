@@ -254,7 +254,7 @@ body {
 
 .kicker {
   font-family: var(--font-mono);
-  font-size: 2.22rem; /* 3× the original 0.74rem */
+  font-size: 1.6rem; /* matches the "ANDREA BLAKE" wordmark */
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--clay);
