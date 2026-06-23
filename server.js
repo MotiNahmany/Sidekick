@@ -7,14 +7,14 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+app.set("trust proxy", 1); // Render runs behind a proxy; needed for a real req.ip
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
 // ---- Maintenance switch -------------------------------------------------
 // Set the env var MAINTENANCE=on (in Render → Environment) to take the whole
 // site offline behind a "back soon" page; set it to off (or remove it) to
 // resume. Evaluated at startup, so a change triggers a redeploy/restart.
-// FORCED OFFLINE 2026-06-22 — remove the `true ||` below to restore normal service.
-const MAINTENANCE = true || /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
+const MAINTENANCE = /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
 
 const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
@@ -48,6 +48,25 @@ if (MAINTENANCE) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Simple in-memory per-IP rate limiter for the model-backed POST endpoints, so
+// a bot can't hammer them and run up the API bill. Counters reset on restart.
+function rateLimit({ windowMs, max }) {
+  const hits = new Map(); // ip -> recent request timestamps
+  return (req, res, next) => {
+    const now = Date.now();
+    const recent = (hits.get(req.ip) || []).filter((t) => now - t < windowMs);
+    if (recent.length >= max) {
+      return res
+        .status(429)
+        .json({ error: "Too many requests. Please slow down and try again shortly." });
+    }
+    recent.push(now);
+    hits.set(req.ip, recent);
+    next();
+  };
+}
+const apiLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 15 });
+
 // JSON schema constraining Claude to exactly the shape the frontend renders.
 const BOOKS_SCHEMA = {
   type: "object",
@@ -73,7 +92,7 @@ const BOOKS_SCHEMA = {
   additionalProperties: false,
 };
 
-app.post("/api/recommend", async (req, res) => {
+app.post("/api/recommend", apiLimiter, async (req, res) => {
   const interests = (req.body?.interests ?? "").trim();
   if (!interests) {
     return res.status(400).json({ error: "Please describe your interests." });
@@ -137,7 +156,7 @@ const SCHEDULE_SCHEMA = {
   additionalProperties: false,
 };
 
-app.post("/api/plan", async (req, res) => {
+app.post("/api/plan", apiLimiter, async (req, res) => {
   const todos = (req.body?.todos ?? "").trim();
   if (!todos) {
     return res.status(400).json({ error: "Please describe what you need to do today." });
@@ -205,10 +224,13 @@ const CLAUDE_NEWS_PROMPT =
   'of the form {"items":[{"date":"<ISO 8601 UTC date-time>","source":"<publisher, or Anthropic>",' +
   '"summary":"<at most 3 short lines; what is new and why it matters>"}]}. Order items newest first.';
 
+// Haiku 4.5 (not Opus): news aggregation is an easy task and Haiku is ~20×
+// cheaper per token. max_uses kept low so a single refresh can't fan out into
+// a dozen billed searches.
 const NEWS_REQUEST = {
-  model: "claude-opus-4-8",
-  max_tokens: 8000,
-  tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 12 }],
+  model: "claude-haiku-4-5-20251001",
+  max_tokens: 4000,
+  tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 }],
 };
 
 // Pull the items array out of the model's final text (a ```json fence, or the
@@ -336,14 +358,46 @@ app.get("/api/news", (req, res) => res.json(tradingNews.get()));
 app.get("/api/claude-news", (req, res) => res.json(claudeNews.get()));
 app.get("/api/github-trending", (req, res) => res.json(githubTrending.get()));
 
+// Run `task` once a day at the given Eastern-time hour. DST-aware: it reads the
+// wall-clock time in America/New_York, so 9:00 stays 9:00 across EST and EDT.
+// Re-armed after each run, so the next day's time is recomputed fresh.
+function scheduleDailyEastern(hour, task) {
+  function msUntilNext() {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).formatToParts(new Date());
+    const val = (t) => Number(parts.find((p) => p.type === t).value);
+    let h = val("hour");
+    if (h === 24) h = 0; // some ICU builds report midnight as 24
+    const secondsNow = h * 3600 + val("minute") * 60 + val("second");
+    let delta = hour * 3600 - secondsNow;
+    if (delta <= 0) delta += 24 * 3600; // already past today's time → tomorrow
+    return delta * 1000;
+  }
+  const arm = () =>
+    setTimeout(() => {
+      task();
+      arm();
+    }, msUntilNext());
+  arm();
+}
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Book recommender running at http://localhost:${PORT}`);
-  // Fetch each feed once at startup, then keep that latest batch fixed
-  // (no periodic refresh). Skipped in maintenance mode.
+  // Fetch all feeds once at startup (so a restart doesn't leave the page empty),
+  // then refresh once a day at 9:00 AM Eastern. Skipped in maintenance mode.
   if (!MAINTENANCE) {
-    tradingNews.refresh();
-    claudeNews.refresh();
-    githubTrending.refresh();
+    const refreshAll = () => {
+      tradingNews.refresh();
+      claudeNews.refresh();
+      githubTrending.refresh();
+    };
+    refreshAll();
+    scheduleDailyEastern(9, refreshAll);
   }
 });
