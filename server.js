@@ -194,8 +194,8 @@ app.post("/api/plan", apiLimiter, async (req, res) => {
 //  News feeds — Trading News + Claude News (web-searched, cached, refreshed)
 // =====================================================================
 // Claude searches the web (server-side web_search tool), returns the items as
-// a JSON block, and each feed is cached in memory and refreshed on a 10-minute
-// interval. The frontend polls /api/news and /api/claude-news.
+// a JSON block, and each feed is cached in memory and refreshed once a month
+// (on the 1st). The frontend polls /api/news and /api/claude-news.
 //
 // Uses the basic web_search_20250305 variant (not _20260209): the dynamic-
 // filtering variant runs code execution under the hood, which burns the search
@@ -358,14 +358,16 @@ app.get("/api/news", (req, res) => res.json(tradingNews.get()));
 app.get("/api/claude-news", (req, res) => res.json(claudeNews.get()));
 app.get("/api/github-trending", (req, res) => res.json(githubTrending.get()));
 
-// Run `task` once a day at the given Eastern-time hour. DST-aware: it reads the
-// wall-clock time in America/New_York, so 9:00 stays 9:00 across EST and EDT.
-// Re-armed after each run, so the next day's time is recomputed fresh.
-function scheduleDailyEastern(hour, task) {
-  function msUntilNext() {
+// Run `task` once a month, on the 1st, at the given Eastern-time hour. DST-aware:
+// it reads the wall-clock time in America/New_York, so 9:00 stays 9:00 across EST
+// and EDT. Implemented as a daily timer that only fires the task on the 1st, so
+// the month boundary is recomputed fresh each day and stays correct across DST.
+function scheduleMonthlyEastern(hour, task) {
+  function easternNow() {
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
       hour12: false,
+      day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
@@ -373,16 +375,20 @@ function scheduleDailyEastern(hour, task) {
     const val = (t) => Number(parts.find((p) => p.type === t).value);
     let h = val("hour");
     if (h === 24) h = 0; // some ICU builds report midnight as 24
-    const secondsNow = h * 3600 + val("minute") * 60 + val("second");
+    return { day: val("day"), hour: h, minute: val("minute"), second: val("second") };
+  }
+  function msUntilNextDaily() {
+    const { hour: h, minute, second } = easternNow();
+    const secondsNow = h * 3600 + minute * 60 + second;
     let delta = hour * 3600 - secondsNow;
     if (delta <= 0) delta += 24 * 3600; // already past today's time → tomorrow
     return delta * 1000;
   }
   const arm = () =>
     setTimeout(() => {
-      task();
+      if (easternNow().day === 1) task();
       arm();
-    }, msUntilNext());
+    }, msUntilNextDaily());
   arm();
 }
 
@@ -390,7 +396,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Book recommender running at http://localhost:${PORT}`);
   // Fetch all feeds once at startup (so a restart doesn't leave the page empty),
-  // then refresh once a day at 9:00 AM Eastern. Skipped in maintenance mode.
+  // then refresh once a month, on the 1st at 9:00 AM Eastern. Skipped in
+  // maintenance mode.
   if (!MAINTENANCE) {
     const refreshAll = () => {
       tradingNews.refresh();
@@ -398,6 +405,6 @@ app.listen(PORT, () => {
       githubTrending.refresh();
     };
     refreshAll();
-    scheduleDailyEastern(9, refreshAll);
+    scheduleMonthlyEastern(9, refreshAll);
   }
 });
