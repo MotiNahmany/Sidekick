@@ -14,7 +14,9 @@ const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 // Set the env var MAINTENANCE=on (in Render → Environment) to take the whole
 // site offline behind a "back soon" page; set it to off (or remove it) to
 // resume. Evaluated at startup, so a change triggers a redeploy/restart.
-const MAINTENANCE = /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
+// Forced ON to take the site fully offline so no API tokens are consumed.
+// To resume: remove the `true ||` below (back to pure env-var control), commit + push.
+const MAINTENANCE = true || /^(1|on|true|yes)$/i.test((process.env.MAINTENANCE || "").trim());
 
 const MAINTENANCE_HTML = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
